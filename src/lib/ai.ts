@@ -7,8 +7,8 @@ import { sql } from "./db";
 
 // Provider: Google Gemini (free tier, no card) when GEMINI_API_KEY is set; Anthropic when ANTHROPIC_API_KEY is set.
 export const PROVIDER: "gemini" | "anthropic" | "none" = process.env.GEMINI_API_KEY ? "gemini" : process.env.ANTHROPIC_API_KEY ? "anthropic" : "none";
-const GEMINI_SMART = [process.env.AI_MODEL_SMART, "gemini-flash-latest", "gemini-3.6-flash", "gemini-3.8-flash"].filter(Boolean) as string[];
-const GEMINI_FAST = [process.env.AI_MODEL_FAST, "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-flash-latest"].filter(Boolean) as string[];
+const GEMINI_SMART = [process.env.AI_MODEL_SMART, "gemini-3.6-flash", "gemini-3.8-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"].filter(Boolean) as string[];
+const GEMINI_FAST = [process.env.AI_MODEL_FAST, "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-flash-latest"].filter(Boolean) as string[];
 export const MODEL_SMART = "smart";
 export const MODEL_FAST = "fast";
 const ANTHROPIC_MODELS = { smart: process.env.AI_MODEL_SMART || "claude-sonnet-5-5", fast: process.env.AI_MODEL_FAST || "claude-haiku-5-5" };
@@ -96,7 +96,11 @@ async function geminiAny(tier: "smart" | "fast", system: string, prompt: string,
       return { ...(await gemini(m, system, prompt, schema, maxTokens)), model: m };
     } catch (e) {
       last = e;
-      if (e instanceof ProviderError && (e.status === 404 || (e.status === 400 && /not found|not supported/i.test(e.body)))) continue;
+      // Free-tier models are often overloaded (503) or rate limited (429): move on to the next model.
+      if (e instanceof ProviderError && ([404, 429, 500, 503].includes(e.status) || (e.status === 400 && /not found|not supported/i.test(e.body)))) {
+        console.warn(`Gemini ${m} failed with ${e.status}, trying next model`);
+        continue;
+      }
       break;
     }
   }
@@ -107,7 +111,7 @@ function mapError(e: unknown): never {
   if (e instanceof HttpError) throw e;
   const status = (e as { status?: number }).status;
   if (status === 401 || status === 403) throw new HttpError(503, "The AI key on the server was rejected. Check the API key in your deployment settings.");
-  if (status === 429) throw new HttpError(429, "The free AI quota is busy right now. Wait a minute and try again.");
+  if (status === 429 || status === 503) throw new HttpError(503, "The free AI models are busy right now. Wait a minute and try again.");
   if (e instanceof ProviderError) console.error("AI provider error", e.status, e.body.slice(0, 500));
   else console.error(e);
   throw new HttpError(502, "The AI service did not respond. Try again in a moment.");
