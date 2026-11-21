@@ -1,0 +1,88 @@
+@layer theme, base, bw, components, utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f3f4ef;
+  --color-sheet: #ffffff;
+  --color-ink: #10222b;
+  --color-night: #0b1d24;
+  --color-night-2: #12303a;
+  --color-cable: #d7e6e3;
+  --color-graphite: #56666c;
+  --color-mist: #8c9a9e;
+  --color-rule: #d6ddd8;
+  --color-wash: #e6ebe7;
+  --color-direct: #2e62e8;
+  --color-bridge: #d99400;
+  --color-upskill: #0f8069;
+  --color-mba: #8a4fd1;
+  --color-alert: #c7354e;
+  --color-ok: #0f8069;
+  --font-display: "Hanken Grotesk Variable", system-ui, sans-serif;
+  --font-sans: "Hanken Grotesk Variable", system-ui, sans-serif;
+  --font-serif: "Newsreader Variable", Georgia, serif;
+  --animate-marquee: marquee var(--duration) infinite linear;
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(calc(-100% - var(--gap))); } }
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+}
+h1, h2, h3, .display { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.028em; line-height: 1.04; text-wrap: balance; }
+.serif { font-family: var(--font-serif); letter-spacing: -0.01em; }
+::selection { background: #1f5bd833; }
+:focus-visible { outline: 2px solid var(--color-direct); outline-offset: 2px; border-radius: 4px; }
+
+@layer bw {
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border-radius: 999px; padding: .6rem 1.1rem; font-weight: 500; font-size: .92rem; transition: background .15s, color .15s, border-color .15s; border: 1px solid transparent; white-space: nowrap; cursor: pointer; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-primary { background: var(--color-ink); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: #1f3a46; }
+.btn-ghost { border-color: var(--color-rule); background: var(--color-sheet); color: var(--color-ink); }
+.btn-ghost:hover:not(:disabled) { border-color: var(--color-ink); }
+.btn-quiet { color: var(--color-graphite); padding: .4rem .6rem; }
+.btn-quiet:hover { color: var(--color-ink); }
+
+.input, .textarea, .select { width: 100%; border: 1px solid var(--color-rule); background: var(--color-sheet); border-radius: 8px; padding: .6rem .75rem; font-size: .95rem; color: var(--color-ink); }
+.input:focus, .textarea:focus, .select:focus { outline: 2px solid #1f5bd855; border-color: var(--color-direct); }
+.textarea { min-height: 7rem; resize: vertical; line-height: 1.5; }
+.label { display: block; font-size: .85rem; font-weight: 500; margin-bottom: .35rem; }
+.hint { font-size: .8rem; color: var(--color-graphite); }
+
+.sheet { background: var(--color-sheet); border: 1px solid var(--color-rule); border-radius: 14px; }
+.chip { display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; padding: .15rem .6rem; font-size: .78rem; font-weight: 500; border: 1px solid var(--color-rule); background: var(--color-sheet); }
+
+}
+
+@layer bw {
+/* Evidence markers: filled = demonstrated, ring = inferred, dashed = missing */
+.mark { width: 12px; height: 12px; border-radius: 999px; flex: none; display: inline-block; }
+.mark-demonstrated { background: var(--color-ink); }
+.mark-inferred { border: 2px solid var(--color-ink); background: var(--color-sheet); }
+.mark-missing { border: 2px dashed var(--color-alert); background: transparent; }
+
+.route-direct { --route: var(--color-direct); }
+.route-bridge { --route: var(--color-bridge); }
+.route-upskill { --route: var(--color-upskill); }
+.route-mba { --route: var(--color-mba); }
+
+}
+
+input[type=range] { accent-color: var(--color-ink); width: 100%; }
+
+@keyframes draw { from { stroke-dashoffset: var(--len, 1200); } to { stroke-dashoffset: 0; } }
+.draw { stroke-dasharray: var(--len, 1200); animation: draw 1.6s cubic-bezier(.6,.1,.2,1) forwards; }
+@keyframes pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+.pop { opacity: 0; transform-origin: center; transform-box: fill-box; animation: pop .35s ease-out forwards; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin .9s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee { animation: none; }
+  .draw { animation: none; stroke-dasharray: none; }
+  .pop { animation: none; opacity: 1; transform: none; }
+}
