@@ -65,25 +65,32 @@ class ProviderError extends Error {
 
 async function gemini(model: string, system: string, prompt: string, schema: unknown | null, maxTokens: number) {
   const gen: J = { maxOutputTokens: maxTokens, temperature: 0.4 };
-  const variants: J[] = schema
-    ? [{ ...gen, responseFormat: { text: { mimeType: "application/json", schema } } }, { ...gen, responseMimeType: "application/json", responseJsonSchema: schema }]
-    : [gen];
+  const schemaText = schema ? `\n\nReturn ONLY a JSON object matching this JSON schema, with no prose and no code fences:\n${JSON.stringify(schema)}` : "";
+  // Try the documented structured-output field, then the legacy one, then plain JSON mode with the schema in the prompt.
+  const variants: { g: J; extra: string }[] = schema
+    ? [
+        { g: { ...gen, responseFormat: { text: { mimeType: "application/json", schema } } }, extra: "" },
+        { g: { ...gen, responseMimeType: "application/json", responseJsonSchema: schema }, extra: "" },
+        { g: { ...gen, responseMimeType: "application/json" }, extra: schemaText },
+      ]
+    : [{ g: gen, extra: "" }];
   let last: ProviderError | null = null;
-  for (const g of variants) {
+  for (const v of variants) {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY! },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: g }),
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts: [{ text: prompt + v.extra }] }], generationConfig: v.g }),
     });
     const body = await res.text();
     if (res.ok) {
       const data = JSON.parse(body);
-      const text = (data.candidates?.[0]?.content?.parts ?? []).map((p: { text?: string }) => p.text ?? "").join("");
+      const text = (data.candidates?.[0]?.content?.parts ?? []).map((p: { text?: string; thought?: boolean }) => (p.thought ? "" : p.text ?? "")).join("");
       return { text, inTok: data.usageMetadata?.promptTokenCount ?? 0, outTok: data.usageMetadata?.candidatesTokenCount ?? 0 };
     }
     last = new ProviderError(res.status, body);
-    // Only retry with the legacy field names when the request shape itself was rejected.
-    if (!(res.status === 400 && /responseFormat|Unknown name|Invalid JSON payload/i.test(body))) break;
+    console.warn(`Gemini ${model} returned ${res.status}: ${body.slice(0, 300)}`);
+    // A 400 that is not about the key usually means this request shape was rejected: try the next shape.
+    if (!(res.status === 400 && !/API_KEY|api key/i.test(body))) break;
   }
   throw last!;
 }
@@ -112,9 +119,12 @@ function mapError(e: unknown): never {
   const status = (e as { status?: number }).status;
   if (status === 401 || status === 403) throw new HttpError(503, "The AI key on the server was rejected. Check the API key in your deployment settings.");
   if (status === 429 || status === 503) throw new HttpError(503, "The free AI models are busy right now. Wait a minute and try again.");
-  if (e instanceof ProviderError) console.error("AI provider error", e.status, e.body.slice(0, 500));
-  else console.error(e);
-  throw new HttpError(502, "The AI service did not respond. Try again in a moment.");
+  let reason = "";
+  if (e instanceof ProviderError) {
+    console.error("AI provider error", e.status, e.body.slice(0, 500));
+    try { reason = String(JSON.parse(e.body)?.error?.message ?? "").slice(0, 160); } catch { reason = ""; }
+  } else console.error(e);
+  throw new HttpError(502, `The AI service did not respond${reason ? ` (${reason})` : ""}. Try again in a moment.`);
 }
 
 type CallOpts<T extends z.ZodType> = {
