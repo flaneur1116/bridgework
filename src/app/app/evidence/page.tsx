@@ -3,64 +3,69 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getClaims, getProfile, getQuestions } from "@/lib/store";
 import { rankRoles } from "@/lib/engine";
-import { SKILLS, skillLabel } from "@/lib/data/skills";
-import { ClaimRow, QuestionsForm } from "@/components/Ledger";
-import { CoverageBar, BandChip } from "@/components/CoverageBar";
+import { skillLabel } from "@/lib/data/skills";
+import { ClaimCard, QuestionsForm } from "@/components/Ledger";
+import { NumberTicker } from "@/components/vendor/number-ticker";
 
 export default async function EvidencePage() {
   const user = await requireUser();
   const [claims, profile, questions] = await Promise.all([getClaims(user.id), getProfile(user.id), getQuestions(user.id)]);
   if (!claims.length || !profile) redirect("/app/start");
   const live = claims.filter((c) => c.verdict !== "rejected");
-  const demo = live.filter((c) => c.status === "demonstrated").length;
-  const inf = live.filter((c) => c.status === "inferred").length;
+  const proven = live.filter((c) => c.status === "demonstrated").length;
+  const assumed = live.filter((c) => c.status === "inferred" && !c.verdict).length;
   const fits = rankRoles(claims).slice(0, 3);
-  const groups = new Map<string, typeof claims>();
-  for (const c of claims) {
-    const g = (SKILLS as Record<string, { group: string }>)[c.skillId]?.group ?? "Other";
-    groups.set(g, [...(groups.get(g) ?? []), c]);
-  }
+  // Assumed claims first: they are the ones that need a decision.
+  const order = [...claims].sort((a, b) => rank(a) - rank(b));
 
   return (
-    <div>
-      <div className="max-w-3xl">
-        <p className="text-graphite">{profile.currentRole}{profile.city ? `, ${profile.city}` : ""}</p>
-        <h1 className="text-4xl font-semibold mt-1">Your evidence ledger</h1>
-        <p className="mt-3 text-lg text-graphite">{profile.summary}</p>
-      </div>
-
-      <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-        <span className="inline-flex items-center gap-2"><span className="mark mark-demonstrated" /> <strong>{demo}</strong> proven by a specific</span>
-        <span className="inline-flex items-center gap-2"><span className="mark mark-inferred" /> <strong>{inf}</strong> assumed, needs your confirmation or proof</span>
-        <span className="inline-flex items-center gap-2"><span className="mark mark-missing" /> missing skills appear on the Routes page</span>
-      </div>
-
-      <div className="mt-8 grid lg:grid-cols-[1.4fr_1fr] gap-8 items-start">
-        <div className="sheet px-5 py-2">
-          {[...groups.entries()].map(([g, cs]) => (
-            <section key={g} className="border-b border-rule last:border-0 py-3">
-              <h2 className="text-sm font-semibold text-graphite pt-2">{g}</h2>
-              <ul className="divide-y divide-rule">{cs.map((c) => <ClaimRow key={c.id} c={c} skill={skillLabel(c.skillId)} />)}</ul>
-            </section>
-          ))}
+    <div className="space-y-12">
+      <section className="grid lg:grid-cols-[1.3fr_1fr] gap-10 items-end">
+        <div>
+          <p className="text-graphite">{profile.currentRole}{profile.city ? `, ${profile.city}` : ""}</p>
+          <h1 className="text-[clamp(2.4rem,5.5vw,4.4rem)] font-extrabold tracking-[-0.045em] leading-[0.95] mt-2">Your evidence</h1>
         </div>
-        <div className="space-y-6 lg:sticky lg:top-24">
-          <QuestionsForm questions={questions} />
-          <section className="sheet p-5">
-            <h2 className="text-xl font-semibold">Closest roles right now</h2>
-            <p className="text-sm text-graphite mt-1">Share of each role&apos;s weighted skills backed by your evidence. Updates as you confirm, reject or answer.</p>
+        <div className="flex gap-10">
+          <Stat n={proven} label="proven" mark="demonstrated" />
+          <Stat n={assumed} label="to confirm" mark="inferred" />
+        </div>
+      </section>
+
+      <div className="grid xl:grid-cols-[1fr_380px] gap-10 items-start">
+        <ul className="grid sm:grid-cols-2 gap-4">{order.map((c) => <ClaimCard key={c.id} c={c} skill={skillLabel(c.skillId)} />)}</ul>
+        <aside className="space-y-10 xl:sticky xl:top-24">
+          <section>
+            <h2 className="text-xl font-bold">Closest roles</h2>
             <ul className="mt-4 space-y-4">
               {fits.map((f) => (
                 <li key={f.slug}>
-                  <div className="flex justify-between items-center mb-1.5"><span className="font-medium">{f.title}</span><BandChip band={f.band} /></div>
-                  <CoverageBar value={f.coverage} band={f.band} />
+                  <Link href={`/app/routes?role=${f.slug}`} className="group block">
+                    <div className="flex justify-between text-[0.95rem]"><span className="group-hover:underline">{f.title}</span><span className="tabular-nums font-semibold">{Math.round(f.coverage * 100)}%</span></div>
+                    <div className="h-1.5 rounded-full bg-wash mt-2 overflow-hidden"><div className="h-full rounded-full bg-ink" style={{ width: `${Math.max(3, f.coverage * 100)}%` }} /></div>
+                  </Link>
                 </li>
               ))}
             </ul>
-            <Link href="/app/routes" className="btn btn-primary mt-5 w-full">Compare routes</Link>
+            <Link href="/app/routes" className="btn btn-primary w-full mt-6">See your routes</Link>
           </section>
-        </div>
+          <QuestionsForm questions={questions} />
+        </aside>
       </div>
+    </div>
+  );
+}
+
+function rank(c: { status: string; verdict: string | null }) {
+  if (c.verdict === "rejected") return 3;
+  if (c.status === "inferred" && !c.verdict) return 0;
+  return c.status === "inferred" ? 2 : 1;
+}
+
+function Stat({ n, label, mark }: { n: number; label: string; mark: string }) {
+  return (
+    <div>
+      <p className="text-[3.4rem] font-bold leading-none tabular-nums"><NumberTicker value={n} /></p>
+      <p className="flex items-center gap-2 text-graphite mt-2"><span className={`mark mark-${mark}`} />{label}</p>
     </div>
   );
 }

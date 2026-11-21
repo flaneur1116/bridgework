@@ -4,7 +4,7 @@ import { apiUser, HttpError } from "@/lib/auth";
 import { analyseResume } from "@/lib/agents";
 import { DEFAULT_CONSTRAINTS, PERSONAS } from "@/lib/data/personas";
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 const Constraints = z.object({
   hoursPerWeek: z.number().min(1).max(60),

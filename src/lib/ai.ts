@@ -67,13 +67,16 @@ async function gemini(model: string, system: string, prompt: string, schema: unk
   const gen: J = { maxOutputTokens: maxTokens, temperature: 0.4 };
   const schemaText = schema ? `\n\nReturn ONLY a JSON object matching this JSON schema, with no prose and no code fences:\n${JSON.stringify(schema)}` : "";
   // Try the documented structured-output field, then the legacy one, then plain JSON mode with the schema in the prompt.
+  // Thinking makes Flash slow (60s+ for a resume); keep it as low as each model allows.
+  const fast: J = { ...gen, thinkingConfig: { thinkingLevel: /3\.8/.test(model) ? "low" : "minimal" } };
   const variants: { g: J; extra: string }[] = schema
     ? [
-        { g: { ...gen, responseFormat: { text: { mimeType: "application/json", schema } } }, extra: "" },
+        { g: { ...fast, responseMimeType: "application/json", responseJsonSchema: schema }, extra: "" },
+        { g: { ...fast, responseFormat: { text: { mimeType: "application/json", schema } } }, extra: "" },
         { g: { ...gen, responseMimeType: "application/json", responseJsonSchema: schema }, extra: "" },
         { g: { ...gen, responseMimeType: "application/json" }, extra: schemaText },
       ]
-    : [{ g: gen, extra: "" }];
+    : [{ g: fast, extra: "" }, { g: gen, extra: "" }];
   let last: ProviderError | null = null;
   for (const v of variants) {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {

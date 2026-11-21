@@ -20,9 +20,9 @@ export function StoryMarquee() {
       <div className="max-w-[1240px] mx-auto px-5 mb-12 flex flex-wrap items-end justify-between gap-6">
         <div>
           <h2 id="stories-title" className="text-[clamp(2.2rem,5vw,4rem)] font-extrabold tracking-[-0.04em] max-w-[14ch]">People have crossed before.</h2>
-          <p className="serif text-xl text-cable/80 mt-4 max-w-xl">Nineteen publicly reported switches, four of which stalled first. In almost every one, proof of work or a bridge role carried the move, not a credential alone.</p>
+          <p className="serif text-xl text-cable/80 mt-4 max-w-xl">19 real switches. Almost all were carried by proof of work or a bridge role, not a certificate.</p>
         </div>
-        <Link href="/stories" className="btn border border-white/30 text-white hover:border-white">Read the sources</Link>
+        <Link href="/stories" className="btn border border-white/30 text-white hover:border-white">Sources</Link>
       </div>
       <div className="space-y-10">{row(STORIES.slice(0, half))}{row(STORIES.slice(half), true)}</div>
     </section>

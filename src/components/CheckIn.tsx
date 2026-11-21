@@ -48,7 +48,7 @@ export function CheckIn({ last }: { last: (Diagnosis & { input?: Record<string, 
           <ul className="mt-2 divide-y divide-rule">
             {last.hypotheses.map((h, i) => (
               <li key={i} className="py-3 flex gap-3">
-                <span className={`chip h-fit ${h.confidence === "high" ? "bg-ink text-white border-ink" : h.confidence === "medium" ? "border-ink" : "border-dashed"}`}>{h.confidence}</span>
+                <span className={`chip h-fit ${h.confidence === "high" ? "bg-ink text-paper border-ink" : h.confidence === "medium" ? "border-ink" : "border-dashed"}`}>{h.confidence}</span>
                 <div><p className="font-medium">{CAUSE[h.cause] ?? h.cause}</p><p className="text-graphite text-[0.93rem]">{h.reasoning}</p></div>
               </li>
             ))}
@@ -66,10 +66,7 @@ export function CheckIn({ last }: { last: (Diagnosis & { input?: Record<string, 
           <p className="text-sm text-ok mt-4">{planV ? `These steps were added to the front of your plan (version ${planV}).` : "These steps were added to the front of your plan."} <Link className="underline" href="/app/plan">Open plan</Link></p>
         </section>
       ) : (
-        <section className="rounded-xl border border-dashed border-graphite p-6">
-          <h2 className="text-xl font-semibold">How the check-in works</h2>
-          <p className="text-graphite mt-2">Report what happened. The AI looks at your funnel, your ledger and your plan, ranks the likely causes, and checks positioning and channel before suggesting new skills or a paid course. Its fixes go straight into your plan as a new version, so you can see what changed.</p>
-        </section>
+        <section className="p-6 text-graphite serif text-xl leading-snug max-w-md">Tell it what happened. It checks how you applied and how you come across before it suggests any new skill, then rewrites your plan.</section>
       )}
     </div>
   );

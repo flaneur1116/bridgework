@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PERSONAS, DEFAULT_CONSTRAINTS, type Constraints } from "@/lib/data/personas";
 import { ConstraintFields } from "./ConstraintFields";
+import { fmtInr } from "@/lib/engine";
 import { Spinner } from "./ui";
 
 type Mode = "sample" | "paste" | "upload";
@@ -75,42 +76,51 @@ export function IntakeForm({ hasExisting }: { hasExisting: boolean }) {
                 <span className="text-sm block mt-2">Wants: {p.target}</span>
               </button>
             ))}
-            <p className="hint sm:col-span-3">Sample people are fictional. The analysis of them is run live, the same way as for your own resume.</p>
+            <p className="text-sm text-mist sm:col-span-3">Fictional people, analysed live.</p>
           </div>
         )}
         {mode === "paste" && (
           <div>
-            <label className="label" htmlFor="resume">Resume text</label>
-            <textarea id="resume" className="textarea min-h-[14rem]" value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste everything: roles, projects, numbers, tools, education." />
-            <p className="hint mt-1">{text.length.toLocaleString("en-IN")} characters. Specifics (numbers, scope, outcomes) become stronger evidence.</p>
+            <label className="sr-only" htmlFor="resume">Resume text</label>
+            <textarea id="resume" className="textarea min-h-[14rem]" value={text} onChange={(e) => setText(e.target.value)} placeholder="Roles, projects, numbers, tools" />
+
           </div>
         )}
         {mode === "upload" && (
           <div>
-            <label className="label" htmlFor="file">Resume PDF (text-based, up to 5 MB)</label>
+            <label className="label" htmlFor="file">Resume PDF, up to 5 MB</label>
             <input id="file" type="file" accept="application/pdf,.pdf" className="input" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-            <p className="hint mt-1">Scanned images cannot be read; paste the text instead.</p>
+
           </div>
         )}
       </fieldset>
 
-      <fieldset className="sheet p-5 sm:p-6">
-        <legend className="sr-only">Direction</legend>
-        <label className="label" htmlFor="target">Where do you want to go?</label>
-        <input id="target" className="input" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="For example: product or consulting, without quitting my job" maxLength={300} />
-        <p className="hint mt-1">Be vague if you are unsure. Bridgework compares eight destination roles either way.</p>
-      </fieldset>
-
-      <fieldset className="sheet p-5 sm:p-6">
-        <legend className="display text-xl font-semibold mb-1">Your limits</legend>
-        <p className="text-graphite text-sm mb-5">These decide which routes are realistic. You can change them any time and the plan will repack.</p>
-        <ConstraintFields value={c} onChange={setC} />
+      <fieldset className="sheet p-5 sm:p-6 space-y-6">
+        <legend className="sr-only">Direction and limits</legend>
+        <div>
+          <label className="label" htmlFor="target">Where to?</label>
+          <input id="target" className="input" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="e.g. product or consulting, without quitting" maxLength={300} />
+        </div>
+        <div className="grid sm:grid-cols-2 gap-6">
+          <div>
+            <div className="flex justify-between items-baseline mb-2"><label htmlFor="hpw" className="label mb-0">Hours a week</label><span className="font-semibold tabular-nums">{c.hoursPerWeek}</span></div>
+            <input id="hpw" type="range" min={2} max={40} value={c.hoursPerWeek} onChange={(e) => setC({ ...c, hoursPerWeek: Number(e.target.value) })} />
+          </div>
+          <div>
+            <div className="flex justify-between items-baseline mb-2"><label htmlFor="bud" className="label mb-0">Learning budget</label><span className="font-semibold tabular-nums">Rs {fmtInr(c.budgetInr)}</span></div>
+            <input id="bud" type="range" min={0} max={500000} step={5000} value={c.budgetInr} onChange={(e) => setC({ ...c, budgetInr: Number(e.target.value) })} />
+          </div>
+        </div>
+        <details className="group">
+          <summary className="cursor-pointer text-sm text-graphite hover:text-ink">Income and other limits</summary>
+          <div className="mt-5"><ConstraintFields value={c} onChange={setC} /></div>
+        </details>
       </fieldset>
 
       <div className="flex flex-wrap items-center gap-4">
-        <button className="btn btn-primary" disabled={busy}>{busy ? <><Spinner />{STAGES[stage]}</> : "Build my evidence ledger"}</button>
-        {hasExisting && !busy && <span className="hint">This replaces your current ledger and plan.</span>}
-        {busy && <span className="hint">Usually 20 to 40 seconds.</span>}
+        <button className="btn btn-primary" disabled={busy}>{busy ? <><Spinner />{STAGES[stage]}</> : "Read my experience"}</button>
+        {hasExisting && !busy && <span className="text-sm text-mist">Replaces your current ledger and plan.</span>}
+        {busy && <span className="text-sm text-mist">About a minute on the free AI tier.</span>}
       </div>
       {err && <p role="alert" className="text-sm text-alert">{err}</p>}
     </form>

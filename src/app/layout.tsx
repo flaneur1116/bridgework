@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Turn your work history into an evidence ledger, compare realistic routes into a new career, and get a plan that adapts.",
 };
 
-export const viewport: Viewport = { themeColor: "#f2f4f1", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#08151a", width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

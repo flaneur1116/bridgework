@@ -12,6 +12,6 @@ export function CoverageBar({ value, band }: { value: number; band: string }) {
 }
 
 export function BandChip({ band }: { band: string }) {
-  const style = band === "Strong" ? "bg-ink text-white border-ink" : band === "Workable" ? "border-ink" : "border-dashed text-graphite";
+  const style = band === "Strong" ? "bg-ink text-paper border-ink" : band === "Workable" ? "border-ink" : "border-dashed text-graphite";
   return <span className={`chip ${style}`}>{band}</span>;
 }

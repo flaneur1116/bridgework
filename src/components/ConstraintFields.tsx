@@ -29,11 +29,11 @@ export function ConstraintFields({ value, onChange, compact = false }: { value: 
         <input id="cut" className="input" type="number" inputMode="numeric" min={0} max={100} value={value.maxPayCutPct} onChange={num("maxPayCutPct")} />
       </div>
       <label className={`flex items-start gap-3 ${compact ? "" : "sm:col-span-2"}`}>
-        <input type="checkbox" className="mt-1 w-4 h-4 accent-[#13262f]" checked={value.fullTimeStudyOk} onChange={(e) => set("fullTimeStudyOk", e.target.checked)} />
+        <input type="checkbox" className="mt-1 w-4 h-4 accent-[#e9f1ef]" checked={value.fullTimeStudyOk} onChange={(e) => set("fullTimeStudyOk", e.target.checked)} />
         <span><span className="font-medium">I could stop working for a year to study full time</span><span className="hint block">Leave this off if you need to keep your income.</span></span>
       </label>
       <label className={`flex items-start gap-3 ${compact ? "" : "sm:col-span-2"}`}>
-        <input type="checkbox" className="mt-1 w-4 h-4 accent-[#13262f]" checked={value.canRelocate} onChange={(e) => set("canRelocate", e.target.checked)} />
+        <input type="checkbox" className="mt-1 w-4 h-4 accent-[#e9f1ef]" checked={value.canRelocate} onChange={(e) => set("canRelocate", e.target.checked)} />
         <span className="font-medium">I can relocate to another city</span>
       </label>
     </div>

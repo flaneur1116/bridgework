@@ -4,7 +4,7 @@ import Link from "next/link";
 import { postJson, useAction, Spinner, ErrorNote } from "./ui";
 import type { Brief, Grade } from "@/lib/agents";
 
-const LEVEL: Record<string, string> = { strong: "bg-ink text-white border-ink", developing: "border-ink", absent: "border-dashed text-alert border-alert" };
+const LEVEL: Record<string, string> = { strong: "bg-ink text-paper border-ink", developing: "border-ink", absent: "border-dashed text-alert border-alert" };
 
 export function ProofForge({ roleSlug, roleTitle, brief, grade }: { roleSlug: string; roleTitle: string; brief: Brief | null; grade: (Grade & { submittedChars?: number }) | null }) {
   const [text, setText] = useState("");
@@ -14,9 +14,9 @@ export function ProofForge({ roleSlug, roleTitle, brief, grade }: { roleSlug: st
   if (!brief)
     return (
       <div className="sheet p-6 max-w-2xl">
-        <h2 className="text-2xl font-semibold">No brief yet for {roleTitle}</h2>
-        <p className="text-graphite mt-2">The AI will design one project that exercises your weakest must-have skills for this role, built from work you have already done, with the rubric a hiring manager would use.</p>
-        <button className="btn btn-primary mt-5" onClick={() => make.run()} disabled={make.pending}>{make.pending ? <><Spinner />Designing your brief</> : "Create my proof brief"}</button>
+        <h2 className="text-2xl font-bold">{roleTitle}</h2>
+        <p className="text-graphite mt-2">One project, built from your own work, graded like a hiring manager would.</p>
+        <button className="btn btn-primary mt-5" onClick={() => make.run()} disabled={make.pending}>{make.pending ? <><Spinner />Designing your brief</> : "Create a brief"}</button>
         <ErrorNote error={make.error} />
       </div>
     );
@@ -44,7 +44,7 @@ export function ProofForge({ roleSlug, roleTitle, brief, grade }: { roleSlug: st
       <div className="space-y-6">
         <form className="sheet p-6" onSubmit={(e) => { e.preventDefault(); submit.run(); }}>
           <h2 className="text-xl font-semibold">Submit your work for grading</h2>
-          <p className="hint mt-1">Paste the text of your case study, deck notes or analysis. Strong criteria are added to your evidence ledger as proven skills.</p>
+          <p className="text-sm text-mist mt-1">Strong criteria become proven skills in your ledger.</p>
           <textarea className="textarea min-h-[12rem] mt-3" value={text} onChange={(e) => setText(e.target.value)} aria-label="Your work" maxLength={20000} placeholder="Paste your work here" />
           <div className="flex items-center gap-3 mt-3">
             <button className="btn btn-primary" disabled={submit.pending || text.trim().length < 150}>{submit.pending ? <><Spinner />Grading against the rubric</> : "Grade my work"}</button>

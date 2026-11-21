@@ -12,8 +12,8 @@ export default async function CheckinPage() {
   const last = await getArtifact<Diagnosis>(user.id, "diagnosis", plan.plan.roleSlug);
   return (
     <div>
-      <h1 className="text-4xl font-semibold">Check-in</h1>
-      <p className="text-graphite mt-2 text-lg max-w-3xl">Applying for {getRole(plan.plan.roleSlug)!.title} roles and not hearing back? Find out why before you buy another course.</p>
+      <p className="text-graphite">{getRole(plan.plan.roleSlug)!.title}</p>
+      <h1 className="text-[clamp(2.4rem,5.5vw,4.4rem)] font-extrabold tracking-[-0.045em] leading-[0.95] mt-2">Not hearing back?</h1>
       <div className="mt-8"><CheckIn last={last?.payload ?? null} /></div>
     </div>
   );

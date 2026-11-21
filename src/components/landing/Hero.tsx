@@ -24,20 +24,15 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
       <Noise opacity={0.07} fps={12} className="pointer-events-none" />
 
       <motion.div style={{ y: textY, opacity: fade }} className="relative z-10 flex-1 flex flex-col justify-center max-w-6xl w-full mx-auto px-5 pt-28 pb-24">
-        <p className="text-cable/80 text-[0.95rem] mb-6">For working professionals in India changing function or industry</p>
         <h1 className="text-[clamp(2.9rem,8.2vw,7.2rem)] font-extrabold leading-[0.95] tracking-[-0.045em] max-w-[11ch]">
           <BlurText text="Every career switch is a crossing." animateBy="words" delay={90} stepDuration={0.45} blur={12} distance={26} className="!m-0" />
         </h1>
         <p className="serif text-[clamp(1.15rem,1.9vw,1.45rem)] text-cable/90 max-w-[36rem] mt-8 leading-snug">
-          Bridgework reads your experience the way a hiring manager would, prices realistic routes in hours, rupees and months, and replans when life pushes back.
+          See which of your skills transfer, what each route costs, and how long it really takes.
         </p>
         <div className="mt-10"><StartButtons signedIn={signedIn} dark /></div>
       </motion.div>
 
-      <div className="relative z-10 max-w-6xl w-full mx-auto px-5 pb-8 flex justify-between items-end text-sm text-cable/70">
-        <span>Scroll to see how it works</span>
-        <span className="hidden sm:block">Sample profiles are fictional. The analysis is live.</span>
-      </div>
     </section>
   );
 }

@@ -104,6 +104,7 @@ export type RouteResult = {
   studyHours: number;
   proofHours: number;
   months: Record<Scenario, number>; // months until a realistic offer in the target role
+  parts: Record<Scenario, { prep: number; fixed: number; search: number }>; // how the months split, for drawing
   cashInr: number;
   incomeLossInr: number; // forgone or reduced income over the transition
   totalInvestmentInr: number;
@@ -131,11 +132,15 @@ export function computeRoutes(role: Role, fit: RoleFit, c: Constraints): RouteRe
   const bandPenalty = fit.band === "Strong" ? 0 : fit.band === "Workable" ? 2 : 4;
   const out: RouteResult[] = [];
 
+  let lastParts = {} as RouteResult["parts"];
   const timeline = (hours: number, search: number, fixedMonths = 0) => {
     const m = {} as Record<Scenario, number>;
+    lastParts = {} as RouteResult["parts"];
     (Object.keys(SCEN) as Scenario[]).forEach((s) => {
       const study = (hours * SCEN[s].hours * BUFFER) / (hpw * WEEKS_PER_MONTH);
-      m[s] = round1(Math.max(1, fixedMonths + study + Math.max(0, search + SCEN[s].search)));
+      const srch = Math.max(0, search + SCEN[s].search);
+      m[s] = round1(Math.max(1, fixedMonths + study + srch));
+      lastParts[s] = { prep: round1(study), fixed: fixedMonths, search: srch };
     });
     return m;
   };
@@ -198,8 +203,11 @@ export function computeRoutes(role: Role, fit: RoleFit, c: Constraints): RouteRe
     const incomeLoss = Math.round(c.currentCtcLpa * 100000);
     const prep = 4; // test prep and applications
     const m = {} as Record<Scenario, number>;
+    lastParts = {} as RouteResult["parts"];
     (["optimistic", "base", "conservative"] as Scenario[]).forEach((s) => {
-      m[s] = round1(prep + 12 + Math.max(0, role.searchMonths.mba + SCEN[s].search) + (s === "conservative" ? 4 : 0));
+      const srch = Math.max(0, role.searchMonths.mba + SCEN[s].search) + (s === "conservative" ? 4 : 0);
+      m[s] = round1(prep + 12 + srch);
+      lastParts[s] = { prep, fixed: 12, search: srch };
     });
     const r = mk("mba", `One-year full-time MBA with campus placement. Helps ${role.mbaHelps} for ${role.title} hiring.`, mba, mba.hours, 0, m, mba.costInr, incomeLoss, flags, [
       "4 months test prep and applications, 12 months programme",
@@ -216,7 +224,7 @@ export function computeRoutes(role: Role, fit: RoleFit, c: Constraints): RouteRe
     const feasible = !flags.some((f) => f.startsWith("Needs a year") || f.includes("above your") || f.includes("below your monthly"));
     const mbaFit = type === "mba" ? (role.mbaHelps === "often" ? -3 : role.mbaHelps === "rarely" ? 4 : 0) : 0;
     const score = months.base + total / 100000 * 0.6 + flags.length * 6 + (feasible ? 0 : 20) + mbaFit + (cashInr === 0 ? -0.5 : 0);
-    return { type, name: ROUTE_NAMES[type], summary, course, studyHours, proofHours, months, cashInr, incomeLossInr, totalInvestmentInr: total, flags, feasible, score, assumptions };
+    return { type, name: ROUTE_NAMES[type], summary, course, studyHours, proofHours, months, parts: lastParts, cashInr, incomeLossInr, totalInvestmentInr: total, flags, feasible, score, assumptions };
   }
 }
 

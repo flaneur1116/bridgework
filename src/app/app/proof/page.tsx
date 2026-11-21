@@ -18,10 +18,9 @@ export default async function ProofPage({ searchParams }: { searchParams: Promis
   const [brief, grade] = await Promise.all([getArtifact<Brief>(user.id, "proof_brief", slug), getArtifact<Grade>(user.id, "proof_grade", slug)]);
   return (
     <div>
-      <h1 className="text-4xl font-semibold">Proof</h1>
-      <p className="text-graphite mt-2 text-lg max-w-3xl">Recruiters screening a career changer look for work, not certificates. Build one piece of proof, get it graded, and watch your evidence change.</p>
-      <div className="mt-4 flex flex-wrap gap-2 text-sm" aria-label="Choose role">
-        {ROLES.map((r) => <Link key={r.slug} href={`/app/proof?role=${r.slug}`} className={`chip ${r.slug === slug ? "bg-ink text-white border-ink" : "hover:border-ink"}`}>{r.title}</Link>)}
+      <h1 className="text-[clamp(2.4rem,5.5vw,4.4rem)] font-extrabold tracking-[-0.045em] leading-[0.95]">Proof, not certificates.</h1>
+      <div className="mt-8 flex flex-wrap gap-2 text-sm" aria-label="Choose role">
+        {ROLES.map((r) => <Link key={r.slug} href={`/app/proof?role=${r.slug}`} className={`chip ${r.slug === slug ? "bg-ink text-paper border-ink" : "hover:border-ink"}`}>{r.title}</Link>)}
       </div>
       <div className="mt-8"><ProofForge key={slug} roleSlug={slug} roleTitle={role.title} brief={brief?.payload ?? null} grade={grade?.payload ?? null} /></div>
     </div>

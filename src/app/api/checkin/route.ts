@@ -3,7 +3,7 @@ import { handle } from "@/lib/route";
 import { apiUser, HttpError } from "@/lib/auth";
 import { diagnose } from "@/lib/agents";
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 const Body = z.object({ applications: z.number().int().min(0).max(1000), responses: z.number().int().min(0).max(1000), interviews: z.number().int().min(0).max(1000), channel: z.string().max(100), feedback: z.string().max(2000) });
 
 export const POST = handle(async (req) => {
